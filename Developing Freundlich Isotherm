@@ -1,0 +1,105 @@
+#=========================================================================
+#  Sorption related functions
+#  (c) tb.
+#=========================================================================
+
+freundlich <- function (c0,            ## concentration at start
+                        cl,            ## concentration at end
+                        ls=10,         ## liquid to solid ratio
+                        plot = FALSE,  ## only plot if requested
+                        ...
+                        )
+{
+    require(MASS)
+    require(gplots)
+    cs <- (c0-cl)*ls
+    isotherm <- lm(log10(cs) ~ log10(cl))
+    isotherm.K <- 10^isothermcoeff[1]isotherm.n<−isothermcoeff[2]
+
+    isotherm.stat <- summary(isotherm)
+    my.cl <- seq(min(cl)*.8, max(cl)*1.2,length.out =40)
+    isotherm.pred <- predict(isotherm, data.frame(cl=my.cl), interval="confidence")
+
+    isotherm.result <- paste("Freundlich isotherm:\n",
+                             " K = ", signif(isotherm.K, 3),
+                             " ± ", signif(sqrt((log(10)*isotherm.K*isotherm.statcoeff[1,2])2),3),"L/kg\n","n=",signif(isotherm.statcoeff[2,1], 3),
+                             " ± ", signif(isotherm.stat$coeff[2,2],3), "\n",
+                             "\n",
+                             "L/S = ", paste(ls,collapse=","), "\n", sep="")
+
+    if (plot) {
+        plot(log10(cs) ~ log10(cl),
+             xlab = expression(log(C[L])),
+             ylab = expression(log(C[S])),
+             xlim = log10(range(my.cl)),
+             pch=19,
+             ...)
+        abline(isotherm)
+        lines(log10(my.cl), isotherm.pred[,2], col="blue")
+        lines(log10(my.cl), isotherm.pred[,3], col="blue")
+        text(min(log10(cl)), max(log10(cs)), adj = c(0,1), isotherm.result)
+    }
+    cat(isotherm.result)
+
+    print(cs)
+    invisible(isotherm)
+}
+
+langmuir <- function (c0,            ## concentration at start
+                      cl,            ## concentration at end
+                      ls = 10,       ## liquid to solid ratio
+                      plot = FALSE,  ## only plot if requested
+                      offset = 0,
+                      ...
+                      )
+{
+    require(MASS)
+    require(gplots)
+    cs <- (c0-cl)*ls + offset
+    isotherm <- lm(I(cl/cs) ~ cl)
+    isotherm.beta <- 1/isothermcoeff[2]isotherm1alpha<−1/(isotherm.beta∗isothermcoeff[1])
+
+    isotherm.stat <- summary(isotherm)
+    my.cl <- seq(min(cl)*.8, max(cl)*1.2,length.out=40)
+    isotherm.pred <- predict(isotherm, data.frame(cl=my.cl), interval="confidence")
+
+    isotherm.result <- paste("Langmuir isotherm:\n",
+                             "  alpha = ",  signif(isotherm.alpha, 3), " ± ",
+                             signif(sqrt((-isothermcoeff[2]/isothermcoeff[1]^2 *
+                                          isotherm.statcoeff[1,2])2+(1/isothermcoeff[1] * isotherm.statcoeff[2,2])2),3),"L/mg\n","beta=",signif(isotherm3beta,3),"±",signif(sqrt(isotherm2beta2∗isotherm.statcoeff[2,2]), 3),
+                             " mg/kg\n",
+                             "\n",
+                             "L/S = ", paste(ls,collapse=","), "\n", sep="")
+   
+    if (plot) {
+        plot(I(cl/cs) ~ cl,
+             xlab = expression(C[L]),
+             ylab = expression(paste(C[L],"/",C[S], sep="")),
+             pch=19,
+             ...)
+        abline(isotherm)
+        lines(my.cl, isotherm.pred[,2], col="blue")
+        lines(my.cl, isotherm.pred[,3], col="blue")
+        text(min(cl), max(cl/cs), adj = c(0,1), isotherm.result)
+
+        text(max(cl), min(cl/cs), adj = c(1,0),
+             expression(C[S]==frac(alpha*beta*C[L], 1+alpha*C[L])))
+    }
+
+    cat(isotherm.result)
+    invisible(isotherm)
+}
+
+ 
+Set the variables
+
+c0 <- c(10,25,50,100)
+cl <- c(6.2,16.6,34.7, 72.3)
+
+Calculate the isotherm
+freundlich(c0, cl, plot=TRUE)
+Freundlich isotherm:
+ K = 8.67 ± 0.0304 L/kg
+ n = 0.809 ± 0.00108
+
+L/S = 10
